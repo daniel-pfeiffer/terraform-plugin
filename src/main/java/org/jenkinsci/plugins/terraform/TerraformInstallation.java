@@ -1,5 +1,6 @@
 package org.jenkinsci.plugins.terraform;
 
+import org.jenkinsci.remoting.RoleChecker;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -58,15 +59,15 @@ public class TerraformInstallation extends ToolInstallation implements Environme
         return new TerraformInstallation(getName(), environment.expand(getHome()), getProperties().toList());
     }
 
-    
+
     public String getExecutablePath(final Launcher launcher) throws IOException, InterruptedException {
-        return launcher.getChannel().call(new Callable<String, IOException>() {
+	return launcher.getChannel().call(new Callable<String, IOException>() {
             public String call() throws IOException {
 
                 FilePath homeDirectory = new FilePath(new File(getHome()));
 
                 try {
-                    if (!(homeDirectory.exists() && homeDirectory.isDirectory())) 
+                    if (!(homeDirectory.exists() && homeDirectory.isDirectory()))
                         throw new FileNotFoundException(Messages.HomeDirectoryNotFound(homeDirectory));
                 } catch (InterruptedException ex) {
                     throw new IOException(ex);
@@ -83,18 +84,22 @@ public class TerraformInstallation extends ToolInstallation implements Environme
 
                 return executable.getRemote();
             }
+	    @Override
+	    public void checkRoles(RoleChecker rc) throws SecurityException
+	    {
+	    }
         });
     }
 
 
     protected String getExecutableFilename() {
         return Functions.isWindows() ? WINDOWS_EXECUTABLE : UNIX_EXECUTABLE;
-    } 
+    }
 
 
     @Extension
     public static class DescriptorImpl extends ToolDescriptor<TerraformInstallation> {
-    
+
         @Override
         public String getDisplayName() {
             return "Terraform";
